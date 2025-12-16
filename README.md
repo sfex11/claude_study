@@ -1,6 +1,6 @@
 # 📚 AI 학습 프로그램 생성기
 
-Claude AI를 활용한 맞춤형 학습 프로그램 자동 생성 및 관리 웹 앱입니다.
+Google Gemini AI를 활용한 맞춤형 학습 프로그램 자동 생성 및 관리 웹 앱입니다.
 
 ## ✨ 주요 기능
 
@@ -48,14 +48,16 @@ cp .env.example .env
 `.env` 파일을 열어 다음과 같이 설정:
 
 ```
-ANTHROPIC_API_KEY=your_actual_api_key_here
+GOOGLE_API_KEY=your_actual_api_key_here
 ```
 
-**Claude API 키 발급 방법:**
-1. [Anthropic Console](https://console.anthropic.com/) 접속
-2. 로그인 후 API Keys 메뉴 선택
-3. "Create Key" 버튼 클릭하여 새 API 키 생성
+**Google Gemini API 키 발급 방법 (무료!):**
+1. [Google AI Studio](https://makersuite.google.com/app/apikey) 접속
+2. Google 계정으로 로그인
+3. "Get API Key" 또는 "Create API Key" 버튼 클릭
 4. 생성된 키를 복사하여 `.env` 파일에 붙여넣기
+
+💡 **참고**: Gemini API는 무료 티어를 제공하여 비용 걱정 없이 사용할 수 있습니다!
 
 ### 5. 앱 실행
 
@@ -95,7 +97,7 @@ git push origin main
 3. 다음 내용 입력:
 
 ```toml
-ANTHROPIC_API_KEY = "your_actual_api_key_here"
+GOOGLE_API_KEY = "your_actual_api_key_here"
 ```
 
 4. "Save" 클릭
@@ -133,7 +135,7 @@ ANTHROPIC_API_KEY = "your_actual_api_key_here"
 ## 🛠️ 기술 스택
 
 - **Frontend/Backend**: Streamlit
-- **AI**: Claude 3.5 Sonnet (Anthropic API)
+- **AI**: Google Gemini Pro (무료!)
 - **Language**: Python 3.8+
 - **Deployment**: Streamlit Cloud
 
@@ -169,10 +171,10 @@ claude_study/
 
 ### API 키 오류
 ```
-⚠️ ANTHROPIC_API_KEY가 설정되지 않았습니다
+⚠️ GOOGLE_API_KEY가 설정되지 않았습니다
 ```
 - `.env` 파일 또는 Streamlit Secrets에 API 키가 올바르게 설정되었는지 확인
-- API 키가 유효한지 [Anthropic Console](https://console.anthropic.com/)에서 확인
+- API 키가 유효한지 [Google AI Studio](https://makersuite.google.com/app/apikey)에서 확인
 
 ### 패키지 설치 오류
 ```bash
@@ -207,4 +209,4 @@ MIT License
 
 ---
 
-Made with ❤️ using Claude AI & Streamlit
+Made with ❤️ using Google Gemini AI & Streamlit

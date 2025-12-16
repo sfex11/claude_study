@@ -1,5 +1,5 @@
 import streamlit as st
-import anthropic
+import google.generativeai as genai
 import os
 import json
 from datetime import datetime
@@ -23,17 +23,18 @@ if 'current_program' not in st.session_state:
 if 'progress' not in st.session_state:
     st.session_state.progress = {}
 
-# Claude API 클라이언트 초기화
-def get_claude_client():
-    api_key = os.getenv('ANTHROPIC_API_KEY') or st.secrets.get('ANTHROPIC_API_KEY', '')
+# Google Gemini API 초기화
+def get_gemini_model():
+    api_key = os.getenv('GOOGLE_API_KEY') or st.secrets.get('GOOGLE_API_KEY', '')
     if not api_key:
-        st.error("⚠️ ANTHROPIC_API_KEY가 설정되지 않았습니다. .env 파일 또는 Streamlit secrets를 확인해주세요.")
+        st.error("⚠️ GOOGLE_API_KEY가 설정되지 않았습니다. .env 파일 또는 Streamlit secrets를 확인해주세요.")
         st.stop()
-    return anthropic.Anthropic(api_key=api_key)
+    genai.configure(api_key=api_key)
+    return genai.GenerativeModel('gemini-pro')
 
-# Claude API를 사용한 학습 프로그램 생성
+# Google Gemini API를 사용한 학습 프로그램 생성
 def generate_learning_program(topic, level, duration, learning_style):
-    client = get_claude_client()
+    model = get_gemini_model()
 
     prompt = f"""당신은 교육 전문가입니다. 다음 주제에 대한 체계적인 학습 프로그램을 만들어주세요.
 
@@ -54,14 +55,8 @@ def generate_learning_program(topic, level, duration, learning_style):
 JSON 형식이 아닌 읽기 쉬운 마크다운 형식으로 작성해주세요."""
 
     try:
-        message = client.messages.create(
-            model="claude-3-5-sonnet-20241022",
-            max_tokens=4096,
-            messages=[
-                {"role": "user", "content": prompt}
-            ]
-        )
-        return message.content[0].text
+        response = model.generate_content(prompt)
+        return response.text
     except Exception as e:
         st.error(f"프로그램 생성 중 오류 발생: {str(e)}")
         return None
@@ -75,7 +70,7 @@ with st.sidebar:
     st.header("⚙️ 설정")
 
     # API 키 상태 확인
-    api_key = os.getenv('ANTHROPIC_API_KEY') or st.secrets.get('ANTHROPIC_API_KEY', '')
+    api_key = os.getenv('GOOGLE_API_KEY') or st.secrets.get('GOOGLE_API_KEY', '')
     if api_key:
         st.success("✅ API 키 연결됨")
     else:
@@ -247,7 +242,7 @@ with tab3:
 st.markdown("---")
 st.markdown("""
 <div style='text-align: center; color: gray;'>
-    <p>Made with ❤️ using Claude AI & Streamlit</p>
+    <p>Made with ❤️ using Google Gemini AI & Streamlit</p>
     <p>💡 Tip: Streamlit Cloud에 배포하여 어디서든 접속 가능합니다!</p>
 </div>
 """, unsafe_allow_html=True)
