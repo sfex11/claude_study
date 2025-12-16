@@ -332,23 +332,33 @@ def parse_daily_material(content):
     }
 
     # 제목 추출
-    title_match = re.search(r'# Day \d+:(.+)', content)
+    title_match = re.search(r'# Day \d+:(.+?)(?:\n|$)', content)
     title = title_match.group(1).strip() if title_match else "오늘의 학습"
 
-    # 섹션별로 분리
-    section_patterns = {
-        '오늘의 학습 목표': r'## 📚 오늘의 학습 목표(.+?)(?=## |$)',
-        '학습 내용': r'## 📖 학습 내용(.+?)(?=## |$)',
-        '실습 과제': r'## 💻 실습 과제(.+?)(?=## |$)',
-        '퀴즈': r'## ❓ 퀴즈(.+?)(?=## |$)',
-        '참고자료': r'## 🔗 참고자료(.+?)(?=## |$)',
-        '학습 팁': r'## 💡 학습 팁(.+?)(?=## |$)'
-    }
+    # 모든 ## 헤더를 찾고 섹션별로 분리 (더 강건한 방법)
+    # ## 뒤에 오는 내용을 다음 ##까지 또는 끝까지 추출
+    section_splits = re.split(r'\n## ', content)
 
-    for section_name, pattern in section_patterns.items():
-        match = re.search(pattern, content, re.DOTALL)
-        if match:
-            sections[section_name] = match.group(1).strip()
+    for section in section_splits[1:]:  # 첫 번째는 제목 부분이므로 스킵
+        # 각 섹션의 헤더와 내용 분리
+        lines = section.split('\n', 1)
+        if len(lines) >= 2:
+            header = lines[0].strip()
+            body = lines[1].strip()
+
+            # 헤더에서 이모지 제거하고 텍스트만 추출
+            if '오늘의 학습 목표' in header or '학습 목표' in header:
+                sections['오늘의 학습 목표'] = body
+            elif '학습 내용' in header:
+                sections['학습 내용'] = body
+            elif '실습 과제' in header or '실습' in header:
+                sections['실습 과제'] = body
+            elif '퀴즈' in header:
+                sections['퀴즈'] = body
+            elif '참고자료' in header or '참고' in header:
+                sections['참고자료'] = body
+            elif '학습 팁' in header or '팁' in header:
+                sections['학습 팁'] = body
 
     return title, sections
 
@@ -563,16 +573,22 @@ with tab3:
         st.subheader(f"📚 {prog['topic']} 학습")
         st.write(f"총 {total_days}일 학습 프로그램")
 
-        # CSS 스타일 추가
+        # CSS 스타일 추가 (매우 작은 버튼)
         st.markdown("""
         <style>
         div[data-testid="column"] {
-            padding: 2px !important;
+            padding: 1px !important;
+            min-width: 45px !important;
         }
         div.stButton > button {
             width: 100%;
-            height: 50px;
-            font-size: 14px;
+            height: 32px;
+            font-size: 10px;
+            padding: 2px 4px;
+            line-height: 1;
+        }
+        div.stButton > button p {
+            font-size: 10px !important;
         }
         </style>
         """, unsafe_allow_html=True)
@@ -580,8 +596,8 @@ with tab3:
         # 수평 스크롤 가능한 버튼 배열
         st.write("📅 날짜를 선택하세요:")
 
-        # 전체 일수를 표시 (한 줄에 15개씩)
-        buttons_per_row = 15
+        # 전체 일수를 표시 (한 줄에 25개씩)
+        buttons_per_row = 25
         num_rows = (total_days + buttons_per_row - 1) // buttons_per_row
 
         for row in range(num_rows):
