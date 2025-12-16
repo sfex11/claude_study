@@ -317,6 +317,41 @@ def generate_daily_material(topic, level, duration, learning_style, day_number, 
         st.error(f"일자별 학습자료 생성 중 오류 발생: {str(e)}")
         return None
 
+# 학습자료를 섹션별로 파싱
+def parse_daily_material(content):
+    """일자별 학습자료를 섹션별로 파싱합니다."""
+    import re
+
+    sections = {
+        '오늘의 학습 목표': '',
+        '학습 내용': '',
+        '실습 과제': '',
+        '퀴즈': '',
+        '참고자료': '',
+        '학습 팁': ''
+    }
+
+    # 제목 추출
+    title_match = re.search(r'# Day \d+:(.+)', content)
+    title = title_match.group(1).strip() if title_match else "오늘의 학습"
+
+    # 섹션별로 분리
+    section_patterns = {
+        '오늘의 학습 목표': r'## 📚 오늘의 학습 목표(.+?)(?=## |$)',
+        '학습 내용': r'## 📖 학습 내용(.+?)(?=## |$)',
+        '실습 과제': r'## 💻 실습 과제(.+?)(?=## |$)',
+        '퀴즈': r'## ❓ 퀴즈(.+?)(?=## |$)',
+        '참고자료': r'## 🔗 참고자료(.+?)(?=## |$)',
+        '학습 팁': r'## 💡 학습 팁(.+?)(?=## |$)'
+    }
+
+    for section_name, pattern in section_patterns.items():
+        match = re.search(pattern, content, re.DOTALL)
+        if match:
+            sections[section_name] = match.group(1).strip()
+
+    return title, sections
+
 # 프로그램 개선
 def improve_learning_program(current_program, improvement_request):
     """사용자 요청에 따라 학습 프로그램을 개선합니다."""
@@ -509,159 +544,157 @@ with tab2:
             else:
                 st.warning("개선 요청사항을 입력해주세요!")
 
-        # 일자별 학습 버튼
-        st.markdown("---")
-        st.subheader("📅 일자별 학습")
-
-        total_days = get_duration_in_days(prog['duration'])
-        st.write(f"총 {total_days}일 학습 프로그램")
-
-        # 프로그램 ID로 일자별 학습자료 가져오기
-        prog_id = prog['id']
-        if prog_id not in st.session_state.daily_materials:
-            st.session_state.daily_materials[prog_id] = {}
-
-        # 일자 버튼들 (스크롤 가능한 한 줄)
-        st.write("학습하고 싶은 날짜를 선택하세요:")
-
-        # 버튼 스타일 추가
-        st.markdown("""
-        <style>
-        .day-button-container {
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            padding: 10px 0;
-        }
-        </style>
-        """, unsafe_allow_html=True)
-
-        # 버튼 컨테이너
-        cols = st.columns(min(10, total_days))
-        for day in range(1, min(11, total_days + 1)):
-            with cols[day - 1]:
-                # 이미 생성된 자료인지 확인
-                is_generated = day in st.session_state.daily_materials[prog_id]
-                button_label = f"Day {day}"
-
-                if is_generated:
-                    if st.button(f"✅ {button_label}", key=f"day_{prog_id}_{day}", type="secondary"):
-                        st.session_state.current_day = day
-                        st.rerun()
-                else:
-                    if st.button(f"📝 {button_label}", key=f"day_{prog_id}_{day}"):
-                        # 학습자료 생성
-                        with st.spinner(f"Day {day} 학습자료를 생성하고 있습니다... 🤖"):
-                            material = generate_daily_material(
-                                prog['topic'],
-                                prog['level'],
-                                prog['duration'],
-                                prog['learning_style'],
-                                day,
-                                total_days
-                            )
-
-                            if material:
-                                # 메모리에 저장
-                                st.session_state.daily_materials[prog_id][day] = material
-
-                                # Supabase에 저장
-                                if 'supabase_id' in prog:
-                                    save_daily_material_to_supabase(prog['supabase_id'], day, material)
-
-                                st.session_state.current_day = day
-                                st.success(f"✅ Day {day} 학습자료가 생성되었습니다!")
-                                st.rerun()
-
-        # 11일차 이상일 경우 추가 버튼 표시
-        if total_days > 10:
-            st.markdown("---")
-            remaining_days = list(range(11, total_days + 1))
-            selected_day = st.selectbox(
-                f"Day 11 ~ Day {total_days} 선택",
-                remaining_days,
-                format_func=lambda x: f"Day {x}" + (" ✅" if x in st.session_state.daily_materials[prog_id] else "")
-            )
-
-            if st.button(f"Day {selected_day} 학습 시작", key=f"day_select_{selected_day}"):
-                if selected_day not in st.session_state.daily_materials[prog_id]:
-                    # 학습자료 생성
-                    with st.spinner(f"Day {selected_day} 학습자료를 생성하고 있습니다... 🤖"):
-                        material = generate_daily_material(
-                            prog['topic'],
-                            prog['level'],
-                            prog['duration'],
-                            prog['learning_style'],
-                            selected_day,
-                            total_days
-                        )
-
-                        if material:
-                            st.session_state.daily_materials[prog_id][selected_day] = material
-
-                            if 'supabase_id' in prog:
-                                save_daily_material_to_supabase(prog['supabase_id'], selected_day, material)
-
-                st.session_state.current_day = selected_day
-                st.rerun()
-
     else:
         st.info("👈 왼쪽에서 프로그램을 선택하거나 새로 생성해주세요.")
 
 with tab3:
     st.header("오늘의 학습")
 
-    if st.session_state.current_program and st.session_state.current_day:
+    if st.session_state.current_program:
         prog = st.session_state.current_program
         prog_id = prog['id']
-        day = st.session_state.current_day
+        total_days = get_duration_in_days(prog['duration'])
 
-        # 학습자료가 있는지 확인
-        if prog_id in st.session_state.daily_materials and day in st.session_state.daily_materials[prog_id]:
-            st.subheader(f"📚 {prog['topic']} - Day {day}")
+        # 프로그램 ID로 일자별 학습자료 가져오기
+        if prog_id not in st.session_state.daily_materials:
+            st.session_state.daily_materials[prog_id] = {}
 
-            # 학습자료 표시
-            st.markdown(st.session_state.daily_materials[prog_id][day])
+        # 일자별 버튼 (수평 스크롤)
+        st.subheader(f"📚 {prog['topic']} 학습")
+        st.write(f"총 {total_days}일 학습 프로그램")
 
-            # 이전/다음 버튼
-            st.markdown("---")
-            col1, col2, col3 = st.columns([1, 2, 1])
+        # CSS 스타일 추가
+        st.markdown("""
+        <style>
+        div[data-testid="column"] {
+            padding: 2px !important;
+        }
+        div.stButton > button {
+            width: 100%;
+            height: 50px;
+            font-size: 14px;
+        }
+        </style>
+        """, unsafe_allow_html=True)
 
-            with col1:
-                if day > 1:
-                    if st.button("⬅️ 이전 날짜"):
-                        st.session_state.current_day = day - 1
-                        st.rerun()
+        # 수평 스크롤 가능한 버튼 배열
+        st.write("📅 날짜를 선택하세요:")
 
-            with col3:
-                total_days = get_duration_in_days(prog['duration'])
-                if day < total_days:
-                    if st.button("다음 날짜 ➡️"):
-                        next_day = day + 1
-                        # 다음 날짜 자료가 없으면 생성
-                        if next_day not in st.session_state.daily_materials[prog_id]:
-                            with st.spinner(f"Day {next_day} 학습자료를 생성하고 있습니다... 🤖"):
+        # 전체 일수를 표시 (한 줄에 15개씩)
+        buttons_per_row = 15
+        num_rows = (total_days + buttons_per_row - 1) // buttons_per_row
+
+        for row in range(num_rows):
+            start_day = row * buttons_per_row + 1
+            end_day = min((row + 1) * buttons_per_row, total_days)
+            num_buttons = end_day - start_day + 1
+
+            cols = st.columns(num_buttons)
+            for i, day in enumerate(range(start_day, end_day + 1)):
+                with cols[i]:
+                    is_generated = day in st.session_state.daily_materials[prog_id]
+
+                    if is_generated:
+                        if st.button(f"✅ Day {day}", key=f"day_btn_{prog_id}_{day}", type="secondary"):
+                            st.session_state.current_day = day
+                            st.rerun()
+                    else:
+                        if st.button(f"📝 Day {day}", key=f"day_btn_{prog_id}_{day}"):
+                            # 학습자료 생성
+                            with st.spinner(f"Day {day} 학습자료를 생성하고 있습니다... 🤖"):
                                 material = generate_daily_material(
                                     prog['topic'],
                                     prog['level'],
                                     prog['duration'],
                                     prog['learning_style'],
-                                    next_day,
+                                    day,
                                     total_days
                                 )
 
                                 if material:
-                                    st.session_state.daily_materials[prog_id][next_day] = material
+                                    st.session_state.daily_materials[prog_id][day] = material
 
                                     if 'supabase_id' in prog:
-                                        save_daily_material_to_supabase(prog['supabase_id'], next_day, material)
+                                        save_daily_material_to_supabase(prog['supabase_id'], day, material)
 
-                        st.session_state.current_day = next_day
-                        st.rerun()
+                                    st.session_state.current_day = day
+                                    st.success(f"✅ Day {day} 학습자료가 생성되었습니다!")
+                                    st.rerun()
+
+        # 선택된 날짜의 학습자료 표시
+        if st.session_state.current_day:
+            day = st.session_state.current_day
+
+            if day in st.session_state.daily_materials[prog_id]:
+                st.markdown("---")
+                st.subheader(f"Day {day} 학습 내용")
+
+                # 학습자료 파싱
+                content = st.session_state.daily_materials[prog_id][day]
+                title, sections = parse_daily_material(content)
+
+                st.write(f"### {title}")
+
+                # 섹션별로 expander 생성
+                with st.expander("📚 오늘의 학습 목표", expanded=True):
+                    st.markdown(sections['오늘의 학습 목표'])
+
+                with st.expander("📖 학습 내용", expanded=True):
+                    st.markdown(sections['학습 내용'])
+
+                with st.expander("💻 실습 과제", expanded=False):
+                    st.markdown(sections['실습 과제'])
+
+                with st.expander("❓ 퀴즈", expanded=False):
+                    st.markdown(sections['퀴즈'])
+
+                with st.expander("🔗 참고자료", expanded=False):
+                    st.markdown(sections['참고자료'])
+
+                with st.expander("💡 학습 팁", expanded=False):
+                    st.markdown(sections['학습 팁'])
+
+                # 이전/다음 버튼
+                st.markdown("---")
+                col1, col2, col3 = st.columns([1, 2, 1])
+
+                with col1:
+                    if day > 1:
+                        if st.button("⬅️ 이전 날짜", key="prev_day"):
+                            st.session_state.current_day = day - 1
+                            st.rerun()
+
+                with col3:
+                    if day < total_days:
+                        if st.button("다음 날짜 ➡️", key="next_day"):
+                            next_day = day + 1
+                            # 다음 날짜 자료가 없으면 생성
+                            if next_day not in st.session_state.daily_materials[prog_id]:
+                                with st.spinner(f"Day {next_day} 학습자료를 생성하고 있습니다... 🤖"):
+                                    material = generate_daily_material(
+                                        prog['topic'],
+                                        prog['level'],
+                                        prog['duration'],
+                                        prog['learning_style'],
+                                        next_day,
+                                        total_days
+                                    )
+
+                                    if material:
+                                        st.session_state.daily_materials[prog_id][next_day] = material
+
+                                        if 'supabase_id' in prog:
+                                            save_daily_material_to_supabase(prog['supabase_id'], next_day, material)
+
+                            st.session_state.current_day = next_day
+                            st.rerun()
+            else:
+                st.info("위의 날짜 버튼을 클릭하여 학습자료를 생성하세요.")
         else:
-            st.info("학습자료가 생성되지 않았습니다. '현재 프로그램' 탭에서 날짜를 선택해주세요.")
+            st.info("📅 위의 날짜 버튼을 선택하여 학습을 시작하세요!")
+
     else:
-        st.info("학습할 프로그램과 날짜를 선택해주세요.")
+        st.info("👈 왼쪽 사이드바에서 학습 프로그램을 선택해주세요.")
 
 with tab4:
     st.header("학습 진행도 관리")
