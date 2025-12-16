@@ -9,6 +9,7 @@ Google Gemini AI를 활용한 맞춤형 학습 프로그램 자동 생성 및 �
 - 📈 **진행도 추적**: 주차별 체크리스트와 학습 노트 기능
 - 💾 **프로그램 저장**: 생성된 학습 프로그램을 Markdown 파일로 다운로드
 - 🔄 **여러 프로그램 관리**: 동시에 여러 학습 주제를 관리
+- 🗄️ **클라우드 데이터 저장**: Supabase를 통한 영구 데이터 저장 (선택사항)
 
 ## 🚀 빠른 시작 (로컬 실행)
 
@@ -59,7 +60,24 @@ GOOGLE_API_KEY=your_actual_api_key_here
 
 💡 **참고**: Gemini API는 무료 티어를 제공하여 비용 걱정 없이 사용할 수 있습니다!
 
-### 5. 앱 실행
+### 5. (선택사항) Supabase 설정
+
+데이터를 클라우드에 영구 저장하려면 Supabase를 설정하세요:
+
+1. [Supabase](https://supabase.com/)에서 무료 프로젝트 생성
+2. SQL Editor에서 `supabase_schema.sql` 실행
+3. `.env` 파일에 Supabase 정보 추가:
+
+```bash
+SUPABASE_URL=https://xxxxx.supabase.co
+SUPABASE_KEY=your_anon_key_here
+```
+
+📖 **상세한 설정 방법**: [SUPABASE_SETUP.md](SUPABASE_SETUP.md) 참조
+
+💡 **참고**: Supabase 설정은 선택사항입니다. 설정하지 않아도 앱은 정상 작동합니다 (세션 기반 저장).
+
+### 6. 앱 실행
 
 ```bash
 streamlit run app.py
@@ -136,6 +154,7 @@ GOOGLE_API_KEY = "your_actual_api_key_here"
 
 - **Frontend/Backend**: Streamlit
 - **AI**: Google Gemini 2.5 Flash Lite (무료!)
+- **Database**: Supabase (PostgreSQL - 선택사항)
 - **Language**: Python 3.8+
 - **Deployment**: Streamlit Cloud
 
@@ -145,12 +164,15 @@ GOOGLE_API_KEY = "your_actual_api_key_here"
 claude_study/
 ├── app.py                      # 메인 Streamlit 앱
 ├── requirements.txt            # Python 패키지 의존성
+├── test_api.py                # API 연결 테스트 스크립트
+├── supabase_schema.sql        # Supabase 데이터베이스 스키마
 ├── .env.example               # 환경 변수 예시
 ├── .gitignore                 # Git 무시 파일
 ├── .streamlit/
 │   ├── config.toml            # Streamlit 설정
 │   └── secrets.toml.example   # Secrets 예시
-└── README.md                  # 프로젝트 문서
+├── README.md                  # 프로젝트 문서
+└── SUPABASE_SETUP.md          # Supabase 설정 가이드
 ```
 
 ## 🔒 보안
@@ -189,8 +211,9 @@ pip install -r requirements.txt
 
 ## 🔄 업데이트 및 개선 계획
 
+- [x] **클라우드 데이터 저장** (Supabase 통합 완료!)
 - [ ] 웹 검색 통합 (실시간 학습 자료 검색)
-- [ ] 사용자 인증 시스템
+- [ ] 사용자 인증 시스템 (Supabase Auth)
 - [ ] 학습 통계 및 분석 대시보드
 - [ ] 모바일 최적화
 - [ ] 다국어 지원

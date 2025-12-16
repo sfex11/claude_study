@@ -4,6 +4,7 @@ import os
 import json
 from datetime import datetime
 from dotenv import load_dotenv
+from supabase import create_client, Client
 
 # 환경 변수 로드
 load_dotenv()
@@ -22,6 +23,142 @@ if 'current_program' not in st.session_state:
     st.session_state.current_program = None
 if 'progress' not in st.session_state:
     st.session_state.progress = {}
+if 'data_loaded' not in st.session_state:
+    st.session_state.data_loaded = False
+
+# Supabase 클라이언트 초기화
+@st.cache_resource
+def get_supabase_client():
+    """Supabase 클라이언트를 초기화하고 캐시합니다."""
+    supabase_url = os.getenv('SUPABASE_URL') or st.secrets.get('SUPABASE_URL', '')
+    supabase_key = os.getenv('SUPABASE_KEY') or st.secrets.get('SUPABASE_KEY', '')
+
+    if not supabase_url or not supabase_key:
+        return None
+
+    try:
+        return create_client(supabase_url, supabase_key)
+    except Exception as e:
+        st.error(f"Supabase 연결 실패: {str(e)}")
+        return None
+
+# Supabase에 학습 프로그램 저장
+def save_program_to_supabase(program):
+    """학습 프로그램을 Supabase에 저장합니다."""
+    supabase = get_supabase_client()
+    if not supabase:
+        return None
+
+    try:
+        data = {
+            'topic': program['topic'],
+            'level': program['level'],
+            'duration': program['duration'],
+            'learning_style': program['learning_style'],
+            'content': program['content']
+        }
+
+        # 기존 프로그램이면 업데이트, 아니면 삽입
+        if 'supabase_id' in program and program['supabase_id']:
+            result = supabase.table('learning_programs').update(data).eq('id', program['supabase_id']).execute()
+        else:
+            result = supabase.table('learning_programs').insert(data).execute()
+            if result.data and len(result.data) > 0:
+                return result.data[0]['id']
+
+        return program.get('supabase_id')
+    except Exception as e:
+        st.error(f"프로그램 저장 실패: {str(e)}")
+        return None
+
+# Supabase에서 학습 프로그램 로드
+def load_programs_from_supabase():
+    """Supabase에서 모든 학습 프로그램을 로드합니다."""
+    supabase = get_supabase_client()
+    if not supabase:
+        return []
+
+    try:
+        result = supabase.table('learning_programs').select('*').order('created_at', desc=True).execute()
+        programs = []
+
+        for idx, item in enumerate(result.data):
+            program = {
+                'id': idx,
+                'supabase_id': item['id'],
+                'topic': item['topic'],
+                'level': item['level'],
+                'duration': item['duration'],
+                'learning_style': item['learning_style'],
+                'content': item['content'],
+                'created_at': item['created_at']
+            }
+            programs.append(program)
+
+        return programs
+    except Exception as e:
+        st.error(f"프로그램 로드 실패: {str(e)}")
+        return []
+
+# Supabase에 진행도 저장
+def save_progress_to_supabase(program_id, supabase_id, progress_data):
+    """학습 진행도를 Supabase에 저장합니다."""
+    supabase = get_supabase_client()
+    if not supabase or not supabase_id:
+        return
+
+    try:
+        data = {
+            'program_id': supabase_id,
+            'completed_weeks': json.dumps(progress_data.get('completed_weeks', [])),
+            'notes': progress_data.get('notes', '')
+        }
+
+        # 기존 진행도 확인
+        existing = supabase.table('learning_progress').select('*').eq('program_id', supabase_id).execute()
+
+        if existing.data and len(existing.data) > 0:
+            # 업데이트
+            supabase.table('learning_progress').update(data).eq('program_id', supabase_id).execute()
+        else:
+            # 삽입
+            supabase.table('learning_progress').insert(data).execute()
+    except Exception as e:
+        st.error(f"진행도 저장 실패: {str(e)}")
+
+# Supabase에서 진행도 로드
+def load_progress_from_supabase(supabase_id):
+    """Supabase에서 특정 프로그램의 진행도를 로드합니다."""
+    supabase = get_supabase_client()
+    if not supabase or not supabase_id:
+        return {'completed_weeks': [], 'notes': ''}
+
+    try:
+        result = supabase.table('learning_progress').select('*').eq('program_id', supabase_id).execute()
+
+        if result.data and len(result.data) > 0:
+            item = result.data[0]
+            return {
+                'completed_weeks': json.loads(item['completed_weeks']) if isinstance(item['completed_weeks'], str) else item['completed_weeks'],
+                'notes': item['notes']
+            }
+
+        return {'completed_weeks': [], 'notes': ''}
+    except Exception as e:
+        st.error(f"진행도 로드 실패: {str(e)}")
+        return {'completed_weeks': [], 'notes': ''}
+
+# 앱 시작 시 데이터 로드
+if not st.session_state.data_loaded:
+    programs = load_programs_from_supabase()
+    if programs:
+        st.session_state.learning_programs = programs
+        # 진행도도 로드
+        for program in programs:
+            if 'supabase_id' in program:
+                progress = load_progress_from_supabase(program['supabase_id'])
+                st.session_state.progress[program['id']] = progress
+    st.session_state.data_loaded = True
 
 # Google Gemini API 초기화
 def get_gemini_model():
@@ -128,6 +265,11 @@ with tab1:
                         'created_at': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     }
 
+                    # Supabase에 저장
+                    supabase_id = save_program_to_supabase(program)
+                    if supabase_id:
+                        program['supabase_id'] = supabase_id
+
                     st.session_state.learning_programs.append(program)
                     st.session_state.current_program = program
                     st.session_state.progress[program['id']] = {
@@ -233,6 +375,9 @@ with tab3:
         progress_data['notes'] = notes
 
         if st.button("💾 진행도 저장"):
+            # Supabase에 저장
+            if 'supabase_id' in prog:
+                save_progress_to_supabase(prog_id, prog['supabase_id'], progress_data)
             st.success("✅ 진행도가 저장되었습니다!")
 
     else:
