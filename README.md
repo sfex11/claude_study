@@ -135,7 +135,7 @@ GOOGLE_API_KEY = "your_actual_api_key_here"
 ## 🛠️ 기술 스택
 
 - **Frontend/Backend**: Streamlit
-- **AI**: Google Gemini Pro (무료!)
+- **AI**: Google Gemini 2.5 Flash Lite (무료!)
 - **Language**: Python 3.8+
 - **Deployment**: Streamlit Cloud
 
