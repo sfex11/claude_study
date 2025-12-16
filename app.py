@@ -573,31 +573,11 @@ with tab3:
         st.subheader(f"📚 {prog['topic']} 학습")
         st.write(f"총 {total_days}일 학습 프로그램")
 
-        # CSS 스타일 추가 (매우 작은 버튼)
-        st.markdown("""
-        <style>
-        div[data-testid="column"] {
-            padding: 1px !important;
-            min-width: 45px !important;
-        }
-        div.stButton > button {
-            width: 100%;
-            height: 32px;
-            font-size: 10px;
-            padding: 2px 4px;
-            line-height: 1;
-        }
-        div.stButton > button p {
-            font-size: 10px !important;
-        }
-        </style>
-        """, unsafe_allow_html=True)
-
         # 수평 스크롤 가능한 버튼 배열
         st.write("📅 날짜를 선택하세요:")
 
-        # 전체 일수를 표시 (한 줄에 25개씩)
-        buttons_per_row = 25
+        # 전체 일수를 표시 (한 줄에 20개씩 - 더 큰 버튼으로 가독성 향상)
+        buttons_per_row = 20
         num_rows = (total_days + buttons_per_row - 1) // buttons_per_row
 
         for row in range(num_rows):
@@ -611,11 +591,11 @@ with tab3:
                     is_generated = day in st.session_state.daily_materials[prog_id]
 
                     if is_generated:
-                        if st.button(f"✅ Day {day}", key=f"day_btn_{prog_id}_{day}", type="secondary"):
+                        if st.button(f"✅ {day}", key=f"day_btn_{prog_id}_{day}", type="secondary", use_container_width=True):
                             st.session_state.current_day = day
                             st.rerun()
                     else:
-                        if st.button(f"📝 Day {day}", key=f"day_btn_{prog_id}_{day}"):
+                        if st.button(f"📝 {day}", key=f"day_btn_{prog_id}_{day}", use_container_width=True):
                             # 학습자료 생성
                             with st.spinner(f"Day {day} 학습자료를 생성하고 있습니다... 🤖"):
                                 material = generate_daily_material(
