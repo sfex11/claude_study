@@ -1,0 +1,38 @@
+name: Deploy to Hugging Face Spaces
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Push to Hugging Face Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+
+          # Hugging Face Space 리포지토리 클론
+          git clone https://huggingface.co/spaces/sfex/ai-learning-program-generator hf-space
+
+          # 필요한 파일만 복사
+          cp app.py hf-space/
+          cp requirements.txt hf-space/
+          cp README.md hf-space/
+          cp -r .streamlit hf-space/ 2>/dev/null || true
+
+          # Hugging Face에 푸시
+          cd hf-space
+          git add .
+          git diff --quiet && git diff --staged --quiet || (
+            git commit -m "Auto-deploy from GitHub: ${{ github.sha }}"
+            git push https://HF_USER:$HF_TOKEN@huggingface.co/spaces/sfex/ai-learning-program-generator main
+          )
