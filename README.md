@@ -2,11 +2,22 @@
 
 Google Gemini AI를 활용한 맞춤형 학습 프로그램 자동 생성 및 관리 웹 앱입니다.
 
+---
+
+## 🎯 데모
+
+- **Hugging Face Spaces**: [여기에서 바로 사용해보세요!](#) (배포 후 링크 추가)
+- **Streamlit Cloud**: [대체 링크](#) (선택사항)
+
+---
+
 ## ✨ 주요 기능
 
 - 🎯 **맞춤형 학습 프로그램 생성**: 주제, 수준, 기간, 학습 스타일에 따른 AI 기반 커리큘럼 자동 생성
+- 📅 **일자별 학습 자료**: 매일의 학습 목표, 내용, 실습, 퀴즈 자동 생성
 - 📖 **체계적인 커리큘럼**: 주차별 학습 내용, 추천 자료, 실습 과제 포함
 - 📈 **진행도 추적**: 주차별 체크리스트와 학습 노트 기능
+- 🔧 **프로그램 개선**: AI 피드백으로 학습 프로그램 맞춤 수정
 - 💾 **프로그램 저장**: 생성된 학습 프로그램을 Markdown 파일로 다운로드
 - 🔄 **여러 프로그램 관리**: 동시에 여러 학습 주제를 관리
 - 🗄️ **클라우드 데이터 저장**: Supabase를 통한 영구 데이터 저장 (선택사항)
@@ -85,7 +96,67 @@ streamlit run app.py
 
 브라우저가 자동으로 열리며 `http://localhost:8501`에서 앱을 확인할 수 있습니다.
 
-## ☁️ Streamlit Cloud 배포 (무료)
+## ☁️ 클라우드 배포 (무료)
+
+### 🤗 Hugging Face Spaces 배포 (추천!)
+
+**장점**: 자동 재배포, 리부팅 불필요, AI/ML 커뮤니티 노출
+
+#### 1. Hugging Face Spaces 생성
+
+1. [Hugging Face](https://huggingface.co/) 계정 생성 또는 로그인
+2. [Spaces](https://huggingface.co/spaces) 페이지 방문
+3. "Create new Space" 클릭
+4. 설정:
+   - **Space name**: `ai-learning-program-generator` (원하는 이름)
+   - **License**: MIT
+   - **Select the Space SDK**: **Streamlit**
+   - **Visibility**: Public (또는 Private)
+5. "Create Space" 클릭
+
+#### 2. 파일 업로드
+
+**방법 A: Git 사용 (추천)**
+```bash
+# Hugging Face Space Git 리포지토리 클론
+git clone https://huggingface.co/spaces/[YOUR_USERNAME]/[SPACE_NAME]
+cd [SPACE_NAME]
+
+# 현재 프로젝트 파일 복사
+cp ../claude_study/app.py .
+cp ../claude_study/requirements.txt .
+cp ../claude_study/README.md .
+
+# 커밋 및 푸시
+git add .
+git commit -m "Initial deployment"
+git push
+```
+
+**방법 B: 웹 인터페이스**
+- Space 페이지에서 "Files" 탭 선택
+- "Add file" → "Upload files" 클릭
+- `app.py`, `requirements.txt` 업로드
+
+#### 3. 환경 변수 설정 (Secrets)
+
+1. Space 페이지에서 "Settings" 클릭
+2. "Repository secrets" 섹션으로 스크롤
+3. 다음 변수 추가:
+   - Name: `GOOGLE_API_KEY`, Value: [Your API Key]
+   - (선택) Name: `SUPABASE_URL`, Value: [Your Supabase URL]
+   - (선택) Name: `SUPABASE_KEY`, Value: [Your Supabase Key]
+4. "Add secret" 클릭
+
+#### 4. 배포 완료!
+
+- 자동으로 앱 빌드 및 배포됨 (약 2-3분 소요)
+- `https://huggingface.co/spaces/[YOUR_USERNAME]/[SPACE_NAME]`에서 접속 가능
+- 코드 변경 시 자동 재배포 (리부팅 불필요!)
+
+---
+
+### ☁️ Streamlit Cloud 배포 (대체 옵션)
 
 ### 1. GitHub 저장소 준비
 

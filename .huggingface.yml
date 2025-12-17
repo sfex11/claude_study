@@ -1,0 +1,17 @@
+title: AI 학습 프로그램 생성기
+emoji: 📚
+colorFrom: blue
+colorTo: purple
+sdk: streamlit
+sdk_version: 1.31.0
+app_file: app.py
+pinned: false
+license: mit
+tags:
+  - education
+  - ai
+  - learning
+  - gemini
+  - streamlit
+  - curriculum
+short_description: AI 기반 맞춤형 학습 프로그램 자동 생성 및 관리 시스템
