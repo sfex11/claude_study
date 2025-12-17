@@ -1,3 +1,15 @@
+---
+title: AI 학습 프로그램 생성기
+emoji: 📚
+colorFrom: blue
+colorTo: purple
+sdk: streamlit
+sdk_version: "1.31.0"
+app_file: app.py
+pinned: false
+license: mit
+---
+
 # 📚 AI 학습 프로그램 생성기
 
 Google Gemini AI를 활용한 맞춤형 학습 프로그램 자동 생성 및 관리 웹 앱입니다.
