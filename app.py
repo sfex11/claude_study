@@ -224,7 +224,7 @@ def get_gemini_model():
         st.error("⚠️ GOOGLE_API_KEY가 설정되지 않았습니다. .env 파일 또는 Streamlit secrets를 확인해주세요.")
         st.stop()
     genai.configure(api_key=api_key)
-    return genai.GenerativeModel('gemini-2.5-flash-lite')
+    return genai.GenerativeModel('gemini-3.0-flash')
 
 # Google Gemini API를 사용한 학습 프로그램 생성
 def generate_learning_program(topic, level, duration, learning_style):
@@ -259,6 +259,7 @@ JSON 형식이 아닌 읽기 쉬운 마크다운 형식으로 작성해주세요
 def get_duration_in_days(duration):
     """학습 기간을 일수로 변환합니다."""
     duration_map = {
+        "3일": 3,
         "1주일": 7,
         "2주일": 14,
         "1개월": 30,
@@ -437,7 +438,7 @@ with tab1:
 
     with col2:
         duration = st.selectbox("⏱️ 학습 기간",
-                               ["1주일", "2주일", "1개월", "2개월", "3개월", "6개월"])
+                               ["3일", "1주일", "2주일", "1개월", "2개월", "3개월", "6개월"])
 
         learning_style = st.selectbox("🎨 선호하는 학습 방식",
                                      ["이론 중심", "실습 중심", "프로젝트 기반", "혼합형"])
@@ -725,7 +726,7 @@ with tab4:
         st.write("### 주차별 완료 체크")
 
         duration_weeks = {
-            "1주일": 1, "2주일": 2, "1개월": 4,
+            "3일": 1, "1주일": 1, "2주일": 2, "1개월": 4,
             "2개월": 8, "3개월": 12, "6개월": 24
         }
         weeks = duration_weeks.get(prog['duration'], 4)
