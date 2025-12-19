@@ -23,7 +23,7 @@ print("\n테스트 요청 전송 중...")
 
 try:
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('gemini-3.0-flash')
+    model = genai.GenerativeModel('gemini-2.5-flash-lite')
 
     # 간단한 테스트 메시지
     response = model.generate_content("안녕하세요! 간단히 자기소개를 해주세요.")

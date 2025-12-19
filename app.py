@@ -224,7 +224,7 @@ def get_gemini_model():
         st.error("⚠️ GOOGLE_API_KEY가 설정되지 않았습니다. .env 파일 또는 Streamlit secrets를 확인해주세요.")
         st.stop()
     genai.configure(api_key=api_key)
-    return genai.GenerativeModel('gemini-3.0-flash')
+    return genai.GenerativeModel('gemini-2.5-flash-lite')
 
 # Google Gemini API를 사용한 학습 프로그램 생성
 def generate_learning_program(topic, level, duration, learning_style):
